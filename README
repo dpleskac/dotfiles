@@ -1,0 +1,4 @@
+brew install stow
+stow nvim
+stow tmux
+stow starship
