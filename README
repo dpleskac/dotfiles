@@ -1,4 +1,17 @@
-brew install stow
+
+cd ~/
+git clone https://github.com/dpleskac/dotfiles.git
+
+brew install stow nvim tmux starship font-hack-nerd-font
+
 stow nvim
 stow tmux
 stow starship
+
+git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
+~/.tmux/plugins/tpm/bin/install_plugins
+
+# manual steps iTerm2
+- set font to Hack Nerd
+- enable clipboard access
+
