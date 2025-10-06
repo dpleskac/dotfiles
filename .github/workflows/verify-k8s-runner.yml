@@ -1,0 +1,48 @@
+name: Verify Kubernetes Self-Hosted Runner
+
+on:
+  workflow_dispatch: # Allows manual triggering from the GitHub UI
+
+jobs:
+  verify-runner:
+    # Use the label that identifies your self-hosted Kubernetes runner
+    runs-on: self-hosted
+    
+    steps:
+      - name: Checkout code (optional, but good practice)
+        uses: actions/checkout@v4
+
+      - name: Display Runner Hostname and User
+        run: |
+          echo "Running on host: $(hostname)"
+          echo "Running as user: $(whoami)"
+          echo "Current working directory: $(pwd)"
+
+      - name: Verify kubectl installation and client version
+        run: kubectl version --client
+
+      - name: Get Kubernetes Contexts (optional, if multiple contexts are configured)
+        run: kubectl config get-contexts
+
+      - name: Verify Kubernetes API connectivity and list nodes
+        run: kubectl get nodes
+
+      - name: List pods in all namespaces (cluster-wide view)
+        run: kubectl get pods -A
+
+      - name: Get current runner pod's namespace (if running in-cluster)
+        id: get_namespace
+        run: |
+          if [ -f "/var/run/secrets/kubernetes.io/serviceaccount/namespace" ]; then
+            NAMESPACE=$(cat /var/run/secrets/kubernetes.io/serviceaccount/namespace)
+            echo "Runner is in namespace: $NAMESPACE"
+            echo "KUBE_NAMESPACE=$NAMESPACE" >> "$GITHUB_ENV"
+          else
+            echo "Could not determine runner's Kubernetes namespace from service account."
+            echo "KUBE_NAMESPACE=default" >> "$GITHUB_ENV" # Fallback or handle as error
+          fi
+        shell: bash
+
+      - name: List pods in the runner's namespace
+        if: env.KUBE_NAMESPACE != 'default' # Only run if namespace was successfully identified
+        run: kubectl get pods -n ${{ env.KUBE_NAMESPACE }}
